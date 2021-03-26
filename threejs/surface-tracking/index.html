@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+        <title>Onirix Web AR SDK - ThreeJS surface-tracking test</title>
+        <script src="https://sdk.onirix.com/0.1.0/ox-sdk.js"></script>
+        <script src="https://threejs.org/build/three.js"></script>
+    </head>
+    <body>
+        <script>
+
+            // ====== ThreeJS ======
+
+            var renderer, scene, camera;
+
+            function setupRenderer(rendererCanvas) {
+                
+                const width = rendererCanvas.width;
+                const height = rendererCanvas.height;
+                
+                // Initialize renderer with rendererCanvas provided by Onirix SDK
+                renderer = new THREE.WebGLRenderer({ canvas: rendererCanvas, alpha: true });
+                renderer.setClearColor(0x000000, 0);
+                renderer.setSize(width, height);
+                
+                // Ask Onirix SDK for camera parameters to create a 3D camera that fits with the AR projection.
+                const cameraParams = OX.getCameraParameters();
+                camera = new THREE.PerspectiveCamera(cameraParams.fov, cameraParams.aspect, 0.1, 1000);
+                camera.matrixAutoUpdate = false;
+                
+                // Create an empty scene
+                scene = new THREE.Scene();
+                
+                // Add some lights
+                const ambientLight = new THREE.AmbientLight(0xcccccc, 0.4);
+                scene.add(ambientLight);
+                const hemisphereLight = new THREE.HemisphereLight(0xbbbbff, 0x444422);
+                scene.add(hemisphereLight);
+
+                // Create an empty cube and add it to the scene
+                let material = new THREE.MeshPhongMaterial();
+                let geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+                let cube = new THREE.Mesh(geometry, material);
+                // Place the cube 2m away the camera so it can be seen
+                cube.position.z = -2;
+                scene.add(cube);
+
+                // ThreeJS axes helper will display the coordinate system
+                let axesHelper = new THREE.AxesHelper(5);
+                scene.add(axesHelper);
+
+            }
+            
+            function updatePose(pose) {
+
+                // When a new pose is detected, update the 3D camera
+                let modelViewMatrix = new THREE.Matrix4();
+                modelViewMatrix = modelViewMatrix.fromArray(pose);
+                camera.matrix = modelViewMatrix;
+                camera.matrixWorldNeedsUpdate = true;
+
+            }
+
+            function onResize() {
+
+                // When device orientation changes, it is required to update camera params.
+                const width = renderer.domElement.width;
+                const height = renderer.domElement.height;
+                const cameraParams = OX.getCameraParameters();
+                camera.fov = cameraParams.fov;
+                camera.aspect = cameraParams.aspect;
+                camera.updateProjectionMatrix();
+                renderer.setSize(width, height);
+
+            }
+
+            function render() {
+
+                // Just render the scene
+                renderer.render(scene, camera);
+            }
+
+            function renderLoop() {
+
+                render();
+                requestAnimationFrame(() => renderLoop());
+
+            }
+
+            
+            // ====== Onirix SDK ======
+
+            let config = {
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUyMDIsInByb2plY3RJZCI6MTQ0MjgsInJvbGUiOjMsImlhdCI6MTYxNjc1ODY5NX0.8F5eAPcBGaHzSSLuQAEgpdja9aEZ6Ca_Ll9wg84Rp5k",
+                mode: OnirixSDK.TrackingMode.Surface
+            }
+
+            OX.init(config).then(rendererCanvas => {
+
+                // Setup ThreeJS renderer
+                setupRenderer(rendererCanvas);
+
+                // Initialize render loop
+                renderLoop();
+
+                OX.subscribe(OnirixSDK.Events.OnPose, function (pose) {
+                    updatePose(pose);
+                });
+
+                OX.subscribe(OnirixSDK.Events.OnResize, function () {
+                    onResize();
+                });
+
+            });
+
+        </script>
+    </body>
+</html>
