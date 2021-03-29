@@ -6,5 +6,5 @@ Access the experience through the following [link](https://onirix-ar.github.io/t
 
 Then, scan the following marker image:
 
-![marker-image](onirix-marker.jpg)
+![marker-image](marker-onirix.jpg)
 
