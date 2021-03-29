@@ -4,4 +4,4 @@ In this repository you will find sample projects of Onirix Web AR SDK using diff
 
 * [Three.js samples](./threejs)
 
-Visit our [official documentation](https://docs.onirix.com/onirix-sdk/web-ar){:target="_blank"} for more information.
+Visit our [official documentation](https://docs.onirix.com/onirix-sdk/web-ar) for more information.

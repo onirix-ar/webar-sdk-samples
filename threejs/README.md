@@ -1,6 +1,6 @@
 # Sample projects using Three.js
 
-Here it is the list of sample projects using [Three.js](https://github.com/mrdoob/three.js){:target="_blank"} library:
+Here it is the list of sample projects using [Three.js](https://github.com/mrdoob/three.js) library:
 
 Sample | Description | Test it
 :----------: | :---------: | :---:
