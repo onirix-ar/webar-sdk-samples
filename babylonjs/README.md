@@ -1,6 +1,6 @@
-# Sample projects using Three.js
+# Sample projects using Babylon.js
 
-Here it is the list of sample projects using [Three.js](https://github.com/mrdoob/three.js) library:
+Here it is the list of sample projects using [Babylon.js](https://github.com/BabylonJS) library:
 
 Sample | Description | Link
 :----------: | :---------: | :---:
