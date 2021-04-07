@@ -2,8 +2,8 @@
 
 Here it is the list of sample projects using [Babylon.js](https://github.com/BabylonJS) library:
 
-Sample | Description | Link
-:----------: | :---------: | :---:
-**Image tracking demo** | Detect and track a sample marker image.  | [Open](./image-tracking)
-**Surface tracking demo** | Place an object 2m away and track it with device motion sensors (gyroscope) | [Open](./surface-tracking)
+Sample | Description | Preview | Link
+:----------: | :---------: | :----: | :---:
+**Image tracking demo** | Detect and track a marker image. A 3D frame is shown while image is tracked. | ![](image-sample.gif) | [Open](./image-tracking)
+**Surface tracking demo** | Touch floor surface to place animated objects and track them with device motion sensors (gyroscope) | ![](surface-sample.gif) | [Open](./surface-tracking)
 
