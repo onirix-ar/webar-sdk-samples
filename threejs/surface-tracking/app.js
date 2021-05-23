@@ -37,16 +37,13 @@ function setupRenderer(rendererCanvas) {
         })
     );
   
-    // Rotate floor to be horizontal and place it 2 meters below camera
+    // Rotate floor to be horizontal and place it 1 meter below camera
     floor.rotateX(Math.PI / 2)
-    floor.position.set(0, -2, 0);
+    floor.position.set(0, -1, 0);
     scene.add(floor);
 
-    // Create a raycaster and add a screen touch listener
+    // Create a raycaster
     raycaster = new THREE.Raycaster();
-    rendererCanvas.addEventListener('touchstart', (event) => {
-        onTouch(event);
-    }, true);
 
     animationMixers = [];
     clock = new THREE.Clock(true);
@@ -60,6 +57,8 @@ function updatePose(pose) {
     modelViewMatrix = modelViewMatrix.fromArray(pose);
     camera.matrix = modelViewMatrix;
     camera.matrixWorldNeedsUpdate = true;
+
+    this.render();
 
 }
 
@@ -95,17 +94,10 @@ function renderLoop() {
 
 }
 
-function onTouch(event) {
-
-    const touchPos = new THREE.Vector2();
-    
-    const canvasRect = renderer.domElement.getBoundingClientRect();
-    touchPos.x = ((event.touches[0].clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
-    touchPos.y = -((event.touches[0].clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
-
-    raycaster.setFromCamera(touchPos, camera);
+function onTouch(touchPos) {
 
     // Raycast
+    raycaster.setFromCamera(touchPos, camera);
     const intersects = raycaster.intersectObject(floor);
 
     if (intersects.length > 0 && intersects[0].object == floor) {
@@ -155,6 +147,10 @@ OX.init(config).then(rendererCanvas => {
 
     OX.subscribe(OnirixSDK.Events.OnResize, function () {
         onResize();
+    });
+
+    OX.subscribe(OnirixSDK.Events.OnTouch, function (touchPos) {
+        onTouch(touchPos);
     });
 
 }).catch((error) => {

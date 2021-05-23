@@ -32,14 +32,9 @@ function setupRenderer(rendererCanvas) {
     floor.material.diffuseColor = new BABYLON.Color3(255, 0, 255);
     floor.material.alpha = 0.0;
     
-    // Rotate floor to be horizontal and place it 2 meters below camera
+    // Rotate floor to be horizontal and place it 1 meter below camera
     floor.rotation.x = Math.PI / 2;
-    floor.position.y = -2;
-
-    // Create a raycaster and add a screen touch listener
-    rendererCanvas.addEventListener('touchstart', (event) => {
-        onTouch(event);
-    }, true);
+    floor.position.y = -1;
 
 }
 
@@ -74,6 +69,8 @@ function updatePose(pose) {
     camera.position = position;
     camera.rotationQuaternion = rotationQuaternion;
 
+    this.render();
+
 }
 
 function render() {
@@ -100,10 +97,14 @@ function renderLoop() {
 
 }
 
-function onTouch(event) {
+function onTouch(touchPos) {
 
     // Raycast
-    const raycastResult = scene.pick(event.touches[0].clientX, event.touches[0].clientY)
+    const cx = engine.getRenderWidth() / 2;
+    const cy = engine.getRenderHeight() / 2;
+    const x = cx * (touchPos.x + 1);
+    const y = cy * (-touchPos.y + 1);
+    const raycastResult = scene.pick(x, y);
     if (raycastResult.hit && raycastResult.pickedMesh === floor) {
         // Load a 3D model and add it to the scene over touched position
         BABYLON.SceneLoader.ImportMesh("", "bear.glb", null, scene, (meshes) => {
@@ -141,6 +142,10 @@ OX.init(config).then(rendererCanvas => {
 
     OX.subscribe(OnirixSDK.Events.OnResize, function () {
         onResize();
+    });
+
+    OX.subscribe(OnirixSDK.Events.OnTouch, function (touchPos) {
+        onTouch(touchPos);
     });
 
 }).catch((error) => {
