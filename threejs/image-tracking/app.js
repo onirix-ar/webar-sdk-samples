@@ -1,4 +1,11 @@
 
+// ====== Imports ======
+
+import OnirixSDK from "https://sdk.onirix.com/0.3.0/ox-sdk.esm.js";
+import * as THREE from 'https://cdn.skypack.dev/three@0.127.0';
+import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.127.0/examples/jsm/loaders/GLTFLoader.js';
+
+
 // ====== ThreeJS ======
 
 var renderer, scene, camera, model;
@@ -28,7 +35,7 @@ function setupRenderer(rendererCanvas) {
     scene.add(hemisphereLight);
 
     // Load a 3D frame model
-    const gltfLoader = new THREE.GLTFLoader();
+    const gltfLoader = new GLTFLoader();
     gltfLoader.load("frame.glb", (gltf) => {
         model = gltf.scene;
     });
@@ -77,8 +84,9 @@ function renderLoop() {
 
 // ====== Onirix SDK ======
 
+let OX = new OnirixSDK("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUyMDIsInByb2plY3RJZCI6MTQ0MjksInJvbGUiOjMsImlhdCI6MTYxNjc2MDI5M30.knKDX5vda6UyqB8CobqgPQ8BS7OYQo4RDfIuGm-EJGg");
+
 let config = {
-    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUyMDIsInByb2plY3RJZCI6MTQ0MjksInJvbGUiOjMsImlhdCI6MTYxNjc2MDI5M30.knKDX5vda6UyqB8CobqgPQ8BS7OYQo4RDfIuGm-EJGg",
     mode: OnirixSDK.TrackingMode.Image
 }
 

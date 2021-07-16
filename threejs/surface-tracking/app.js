@@ -1,3 +1,10 @@
+
+// ====== Imports ======
+
+import OnirixSDK from "https://sdk.onirix.com/0.3.0/ox-sdk.esm.js";
+import * as THREE from 'https://cdn.skypack.dev/three@0.127.0';
+import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.127.0/examples/jsm/loaders/GLTFLoader.js';
+
 // ====== ThreeJS ======
 
 var renderer, scene, camera, floor, raycaster, clock, animationMixers;
@@ -58,7 +65,7 @@ function updatePose(pose) {
     camera.matrix = modelViewMatrix;
     camera.matrixWorldNeedsUpdate = true;
 
-    this.render();
+    render();
 
 }
 
@@ -103,7 +110,7 @@ function onTouch(touchPos) {
     if (intersects.length > 0 && intersects[0].object == floor) {
         
         // Load a 3D model and add it to the scene over touched position
-        const gltfLoader = new THREE.GLTFLoader();
+        const gltfLoader = new GLTFLoader();
         gltfLoader.load("bear.glb", (gltf) => {
             const model = gltf.scene;
             const animations = gltf.animations;
@@ -125,8 +132,9 @@ function onTouch(touchPos) {
 
 // ====== Onirix SDK ======
 
+let OX = new OnirixSDK("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUyMDIsInByb2plY3RJZCI6MTQ0MjgsInJvbGUiOjMsImlhdCI6MTYxNjc1ODY5NX0.8F5eAPcBGaHzSSLuQAEgpdja9aEZ6Ca_Ll9wg84Rp5k");
+
 let config = {
-    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUyMDIsInByb2plY3RJZCI6MTQ0MjgsInJvbGUiOjMsImlhdCI6MTYxNjc1ODY5NX0.8F5eAPcBGaHzSSLuQAEgpdja9aEZ6Ca_Ll9wg84Rp5k",
     mode: OnirixSDK.TrackingMode.Surface
 }
 
