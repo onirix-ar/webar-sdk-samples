@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+        <title>Onirix Web AR SDK - A-Frame image-tracking test</title>
+        <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+        <script async type="module" src="app.js"></script>
+        <link rel="stylesheet" href="app.css" />
+    </head>
+    <body>
+        
+        <a-scene
+            vr-mode-ui="enabled: false;"
+            device-orientation-permission-ui="enabled: false">
+
+            <a-assets>
+                <a-asset-item id="frameModel" src="frame.glb"></a-asset-item>
+            </a-assets>
+
+            <a-camera id="camera"></a-camera>
+
+            <a-entity light="type: ambient; color: #CCCCCC; intensity: 0.4"></a-entity>
+            <a-entity light="type: directional; color: #FFFFFF; intensity: 0.6" position="-0.5 1 1"></a-entity>
+        
+        </a-scene>
+        
+        <div id="loading-screen">
+            <div class="bounce1"></div>
+            <div class="bounce2"></div>
+            <div class="bounce3"></div>
+        </div>
+        <div id="error-screen">
+            <span id="error-title"></span>
+            <span id="error-message"></span>
+        </div>
+    </body>
+</html>
