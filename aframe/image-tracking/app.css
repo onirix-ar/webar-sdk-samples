@@ -83,5 +83,10 @@ body {
     padding: 20px 40px;
 }
 
+/* A-Frame */
+
+a-scene {
+    position: unset !important;
+}
 
 
