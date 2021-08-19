@@ -107,6 +107,7 @@ body {
     left: 0;
     width: 100%;
     display: none;
+    z-index: 2;
 }
 
 #rotation-slider, #scale-slider {
@@ -136,6 +137,7 @@ body {
     width: 100%;
     text-align: center;
     display: none;
+    z-index: 2;
 }
 
 #black, #silver, #orange, #blue {
