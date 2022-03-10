@@ -28,10 +28,11 @@ function setupRenderer(rendererCanvas) {
     scene = new THREE.Scene();
     
     // Add some lights
-    const ambientLight = new THREE.AmbientLight(0xcccccc, 0.4);
-    scene.add(ambientLight);
     const hemisphereLight = new THREE.HemisphereLight(0xbbbbff, 0x444422);
     scene.add(hemisphereLight);
+    const directionalLight = new THREE.DirectionalLight(0xFFFFFF, 1);
+    directionalLight.position.set(0, 10, 0);
+    scene.add(directionalLight);
 
     // Add transparent floor for model placement using raycasting
     floor = new THREE.Mesh(
