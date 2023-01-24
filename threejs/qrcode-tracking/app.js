@@ -66,11 +66,6 @@ function render() {
   renderer.render(scene, camera);
 }
 
-function renderLoop() {
-  render();
-  requestAnimationFrame(() => renderLoop());
-}
-
 // ====== Onirix SDK ======
 
 let OX = new OnirixSDK(
@@ -78,7 +73,7 @@ let OX = new OnirixSDK(
 );
 
 let config = {
-  mode: OnirixSDK.TrackingMode.Image,
+  mode: OnirixSDK.TrackingMode.QRCode,
 };
 
 OX.init(config)
@@ -89,26 +84,31 @@ OX.init(config)
     // All loaded, so hide loading screen
     document.getElementById("loading-screen").style.display = "none";
 
-    // Initialize render loop
-    renderLoop();
+    OX.subscribe(OnirixSDK.Events.OnFrame, function () {
+      render();
+    });
 
-    OX.subscribe(OnirixSDK.Events.OnDetected, function (id) {
-      console.log("Detected Image: " + id);
+    OX.subscribe(OnirixSDK.Events.OnDetected, function (decoded) {
+      console.log("Detected QR Code: " + decoded);
       // Diplay 3D model
       scene.add(model);
       // It is useful to synchronize scene background with the camera feed
       scene.background = new THREE.VideoTexture(OX.getCameraFeed());
+      // Some decoded text
+      document.getElementById("decoded-block").style.display = "inline";
+      document.getElementById("decoded-content").innerText = decoded;
     });
 
     OX.subscribe(OnirixSDK.Events.OnPose, function (pose) {
       updatePose(pose);
     });
 
-    OX.subscribe(OnirixSDK.Events.OnLost, function (id) {
-      console.log("Lost Image: " + id);
+    OX.subscribe(OnirixSDK.Events.OnLost, function (decoded) {
+      console.log("Lost QR Code: " + decoded);
       // Hide 3D model
       scene.remove(model);
       scene.background = null;
+      document.getElementById("decoded-block").style.display = "none";
     });
 
     OX.subscribe(OnirixSDK.Events.OnResize, function () {
