@@ -4,7 +4,7 @@ import OnirixSDK from "https://unpkg.com/@onirix/ar-engine-sdk@1.0.0/dist/ox-sdk
 
 // ====== Onirix SDK ======
 
-let OX = new OnirixSDK(
+const OX = new OnirixSDK(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUyMDIsInByb2plY3RJZCI6MTQ0MjksInJvbGUiOjMsImlhdCI6MTYxNjc2MDI5M30.knKDX5vda6UyqB8CobqgPQ8BS7OYQo4RDfIuGm-EJGg"
 );
 
@@ -16,7 +16,7 @@ AFRAME.registerComponent("onirix-sdk", {
     scene = this.el.sceneEl;
     camera = document.getElementById("camera");
 
-    let config = {
+    const config = {
       mode: OnirixSDK.TrackingMode.Image,
       renderCanvas: this.el.canvas,
     };
@@ -29,6 +29,7 @@ AFRAME.registerComponent("onirix-sdk", {
         // All loaded, so hide loading screen
         document.getElementById("loading-screen").style.display = "none";
 
+        // Subscribe to events
         OX.subscribe(OnirixSDK.Events.OnDetected, function (id) {
           console.log("Detected Image: " + id);
           // Diplay 3D model
@@ -51,7 +52,9 @@ AFRAME.registerComponent("onirix-sdk", {
         OX.subscribe(OnirixSDK.Events.OnLost, function (id) {
           console.log("Lost Image: " + id);
           // Hide 3D model
-          model.setAttribute("visible", false);
+          if (model) {
+            model.setAttribute("visible", false);
+          }
           scene.object3D.background = null;
         });
 
@@ -59,6 +62,7 @@ AFRAME.registerComponent("onirix-sdk", {
           onResize();
         });
 
+        // Start tracking
         OX.start();
       })
       .catch((error) => {
@@ -95,7 +99,7 @@ AFRAME.registerComponent("onirix-sdk", {
 
         document.getElementById("error-screen").style.display = "flex";
       });
-  },
+  }
 });
 
 AFRAME.scenes[0].setAttribute("onirix-sdk", "");

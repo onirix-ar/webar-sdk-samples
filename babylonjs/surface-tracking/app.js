@@ -4,7 +4,7 @@ import OnirixSDK from "https://unpkg.com/@onirix/ar-engine-sdk@1.0.0/dist/ox-sdk
 
 // BabylonJS
 
-var engine, scene, camera, background, floor;
+var engine, scene, camera, background, floor, started;
 
 function setupRenderer(rendererCanvas) {
   // Initialize renderer with rendererCanvas provided by Onirix SDK
@@ -95,11 +95,6 @@ function onResize() {
   camera.freezeProjectionMatrix(projectionMatrix);
 }
 
-function renderLoop() {
-  render();
-  requestAnimationFrame(() => renderLoop());
-}
-
 function onTouch(touchPos) {
   // Raycast
   const cx = engine.getRenderWidth() / 2;
@@ -120,17 +115,21 @@ function onTouch(touchPos) {
       model.rotation.y = Math.atan2(camera.position.x - model.position.x, camera.position.z - model.position.z);
     });
 
-    OX.start();
+    // Start tracking on first touch
+    if (!started) {
+      OX.start();
+      started = true;
+    }
   }
 }
 
 // ====== Onirix SDK ======
 
-let OX = new OnirixSDK(
+const OX = new OnirixSDK(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUyMDIsInByb2plY3RJZCI6MTQ0MjgsInJvbGUiOjMsImlhdCI6MTYxNjc1ODY5NX0.8F5eAPcBGaHzSSLuQAEgpdja9aEZ6Ca_Ll9wg84Rp5k"
 );
 
-let config = {
+const config = {
   mode: OnirixSDK.TrackingMode.Surface,
 };
 
@@ -142,9 +141,7 @@ OX.init(config)
     // All loaded, so hide loading screen
     document.getElementById("loading-screen").style.display = "none";
 
-    // Initialize render loop
-    renderLoop();
-
+    // Subscribe to events
     OX.subscribe(OnirixSDK.Events.OnPose, function (pose) {
       updatePose(pose);
     });
@@ -155,6 +152,10 @@ OX.init(config)
 
     OX.subscribe(OnirixSDK.Events.OnTouch, function (touchPos) {
       onTouch(touchPos);
+    });
+
+    OX.subscribe(OnirixSDK.Events.OnFrame, function () {
+      render();
     });
   })
   .catch((error) => {

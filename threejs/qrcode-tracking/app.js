@@ -68,11 +68,11 @@ function render() {
 
 // ====== Onirix SDK ======
 
-let OX = new OnirixSDK(
+const OX = new OnirixSDK(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUyMDIsInByb2plY3RJZCI6MTQ0MjksInJvbGUiOjMsImlhdCI6MTYxNjc2MDI5M30.knKDX5vda6UyqB8CobqgPQ8BS7OYQo4RDfIuGm-EJGg"
 );
 
-let config = {
+const config = {
   mode: OnirixSDK.TrackingMode.QRCode,
 };
 
@@ -84,10 +84,7 @@ OX.init(config)
     // All loaded, so hide loading screen
     document.getElementById("loading-screen").style.display = "none";
 
-    OX.subscribe(OnirixSDK.Events.OnFrame, function () {
-      render();
-    });
-
+    // Subscribe to events
     OX.subscribe(OnirixSDK.Events.OnDetected, function (decoded) {
       console.log("Detected QR Code: " + decoded);
       // Diplay 3D model
@@ -115,6 +112,11 @@ OX.init(config)
       onResize();
     });
 
+    OX.subscribe(OnirixSDK.Events.OnFrame, function () {
+      render();
+    });
+
+    // Start tracking
     OX.start();
   })
   .catch((error) => {

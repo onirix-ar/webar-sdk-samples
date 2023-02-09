@@ -61,8 +61,6 @@ function updatePose(pose) {
   modelViewMatrix = modelViewMatrix.fromArray(pose);
   camera.matrix = modelViewMatrix;
   camera.matrixWorldNeedsUpdate = true;
-
-  render();
 }
 
 function onResize() {
@@ -90,6 +88,7 @@ function onHitResult(hitResult) {
 
 function placeCar() {
   isCarPlaced = true;
+  OX.start();
 }
 
 function scaleCar(value) {
@@ -110,11 +109,11 @@ function changeCarColor(value) {
 
 // ====== Onirix SDK ======
 
-let OX = new OnirixSDK(
+const OX = new OnirixSDK(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUyMDIsInByb2plY3RJZCI6MTQ0MjgsInJvbGUiOjMsImlhdCI6MTYxNjc1ODY5NX0.8F5eAPcBGaHzSSLuQAEgpdja9aEZ6Ca_Ll9wg84Rp5k"
 );
 
-let config = {
+const config = {
   mode: OnirixSDK.TrackingMode.Surface,
 };
 
@@ -134,7 +133,7 @@ OX.init(config)
           child.material.needsUpdate = true;
         }
       });
-
+      car.scale.set(0.5, 0.5, 0.5);
       scene.add(car);
 
       // All loaded, so hide loading screen
@@ -174,6 +173,7 @@ OX.init(config)
       });
     });
 
+    // Subscribe to events
     OX.subscribe(OnirixSDK.Events.OnPose, function (pose) {
       updatePose(pose);
     });
@@ -191,7 +191,10 @@ OX.init(config)
       onHitResult(hitResult);
     });
 
-    OX.start();
+    OX.subscribe(OnirixSDK.Events.OnFrame, function() {
+      render();
+    });
+
   })
   .catch((error) => {
     // An error ocurred, chech error type and display it

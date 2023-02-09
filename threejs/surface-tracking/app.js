@@ -6,7 +6,7 @@ import { GLTFLoader } from "https://cdn.skypack.dev/three@0.127.0/examples/jsm/l
 
 // ====== ThreeJS ======
 
-var renderer, scene, camera, floor, raycaster, clock, animationMixers;
+var renderer, scene, camera, floor, raycaster, clock, animationMixers, started;
 
 function setupRenderer(rendererCanvas) {
   const width = rendererCanvas.width;
@@ -61,8 +61,6 @@ function updatePose(pose) {
   modelViewMatrix = modelViewMatrix.fromArray(pose);
   camera.matrix = modelViewMatrix;
   camera.matrixWorldNeedsUpdate = true;
-
-  render();
 }
 
 function onResize() {
@@ -79,17 +77,6 @@ function onResize() {
 function render() {
   // Just render the scene
   renderer.render(scene, camera);
-}
-
-function renderLoop() {
-  // Update model animations at a fixed framerate (delta time)
-  const delta = clock.getDelta();
-  animationMixers.forEach((mixer) => {
-    mixer.update(delta);
-  });
-
-  render();
-  requestAnimationFrame(() => renderLoop());
 }
 
 function onTouch(touchPos) {
@@ -114,31 +101,36 @@ function onTouch(touchPos) {
       animationMixers.push(mixer);
     });
 
-    OX.start();
+    if (!started) {
+      // Start tracking on first touch
+      OX.start();
+      started = true;
+    }
   }
 }
 
 // ====== Onirix SDK ======
 
-let OX = new OnirixSDK(
+const OX = new OnirixSDK(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUyMDIsInByb2plY3RJZCI6MTQ0MjgsInJvbGUiOjMsImlhdCI6MTYxNjc1ODY5NX0.8F5eAPcBGaHzSSLuQAEgpdja9aEZ6Ca_Ll9wg84Rp5k"
 );
 
-let config = {
+const config = {
   mode: OnirixSDK.TrackingMode.Surface,
 };
 
 OX.init(config)
   .then((rendererCanvas) => {
+
+    started = false;
+
     // Setup ThreeJS renderer
     setupRenderer(rendererCanvas);
 
     // All loaded, so hide loading screen
     document.getElementById("loading-screen").style.display = "none";
 
-    // Initialize render loop
-    renderLoop();
-
+    // Subscribe to events
     OX.subscribe(OnirixSDK.Events.OnPose, function (pose) {
       updatePose(pose);
     });
@@ -149,6 +141,14 @@ OX.init(config)
 
     OX.subscribe(OnirixSDK.Events.OnTouch, function (touchPos) {
       onTouch(touchPos);
+    });
+
+    OX.subscribe(OnirixSDK.Events.OnFrame, function () {
+      const delta = clock.getDelta();
+      animationMixers.forEach((mixer) => {
+        mixer.update(delta);
+      });
+      render();
     });
   })
   .catch((error) => {

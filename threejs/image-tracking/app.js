@@ -66,18 +66,13 @@ function render() {
   renderer.render(scene, camera);
 }
 
-function renderLoop() {
-  render();
-  requestAnimationFrame(() => renderLoop());
-}
-
 // ====== Onirix SDK ======
 
-let OX = new OnirixSDK(
+const OX = new OnirixSDK(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUyMDIsInByb2plY3RJZCI6MTQ0MjksInJvbGUiOjMsImlhdCI6MTYxNjc2MDI5M30.knKDX5vda6UyqB8CobqgPQ8BS7OYQo4RDfIuGm-EJGg"
 );
 
-let config = {
+const config = {
   mode: OnirixSDK.TrackingMode.Image,
 };
 
@@ -89,9 +84,7 @@ OX.init(config)
     // All loaded, so hide loading screen
     document.getElementById("loading-screen").style.display = "none";
 
-    // Initialize render loop
-    renderLoop();
-
+    // Subscribe to events
     OX.subscribe(OnirixSDK.Events.OnDetected, function (id) {
       console.log("Detected Image: " + id);
       // Diplay 3D model
@@ -115,6 +108,11 @@ OX.init(config)
       onResize();
     });
 
+    OX.subscribe(OnirixSDK.Events.OnFrame, function () {
+      render();
+    });
+
+    // Start tracking
     OX.start();
   })
   .catch((error) => {
