@@ -1,6 +1,6 @@
 // ====== Imports ======
 
-import OnirixSDK from "https://unpkg.com/@onirix/ar-engine-sdk@1.0.0/dist/ox-sdk.esm.js";
+import OnirixSDK from "https://unpkg.com/@onirix/ar-engine-sdk@1.1.0/dist/ox-sdk.esm.js";
 
 // ====== Onirix SDK ======
 
@@ -52,9 +52,7 @@ AFRAME.registerComponent("onirix-sdk", {
         OX.subscribe(OnirixSDK.Events.OnLost, function (id) {
           console.log("Lost Image: " + id);
           // Hide 3D model
-          if (model) {
-            model.setAttribute("visible", false);
-          }
+          model.setAttribute("visible", false);
           scene.object3D.background = null;
         });
 
@@ -102,7 +100,9 @@ AFRAME.registerComponent("onirix-sdk", {
   }
 });
 
-AFRAME.scenes[0].setAttribute("onirix-sdk", "");
+setTimeout(() => {
+  AFRAME.scenes[0].setAttribute("onirix-sdk", "");
+}, 1000);
 
 function updatePose(pose) {
   // When a new pose is detected, update the 3D camera
