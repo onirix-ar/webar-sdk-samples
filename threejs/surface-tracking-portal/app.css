@@ -1,0 +1,121 @@
+/* Fonts */
+
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap');
+
+body {
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+/* Loading screen */
+
+#loading-screen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: #231532;
+}
+  
+#loading-screen > div {
+    width: 18px;
+    height: 18px;
+    margin: 5px;
+    background-color: #FFFFFF;
+    border-radius: 100%;
+    -webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+    animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+}
+  
+#loading-screen .bounce1 {
+    -webkit-animation-delay: -0.32s;
+    animation-delay: -0.32s;
+}
+  
+#loading-screen .bounce2 {
+    -webkit-animation-delay: -0.16s;
+    animation-delay: -0.16s;
+}
+  
+@-webkit-keyframes sk-bouncedelay {
+    0%, 80%, 100% { -webkit-transform: scale(0) }
+    40% { -webkit-transform: scale(1.0) }
+}
+  
+@keyframes sk-bouncedelay {
+    0%, 80%, 100% { 
+        -webkit-transform: scale(0);
+        transform: scale(0);
+    } 40% { 
+        -webkit-transform: scale(1.0);
+        transform: scale(1.0);
+    }
+}
+
+/* Error screen */
+
+#error-screen {
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: #231532;
+    display: none;
+}
+
+#error-title {
+    color: #FFFFFF;
+    font-size: 24pt;
+    font-weight: bold;
+}
+
+#error-message {
+    color: #FFFFFF;
+    font-size: 14pt;
+    padding: 20px 40px;
+}
+
+/* Move around animation */
+
+#move-around-animation {
+    background-image: url('./move-around.gif');
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 200px;
+    height: 200px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    display: none;
+}
+
+/* Place button */
+
+#tap-to-place {
+    display: none;
+    position: absolute;
+    z-index: 0;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    margin: auto;
+    width: 200px;
+    padding: 20px;
+    background-color: #231532;
+    color: #FFFFFF;
+    border: 0;
+    border-radius: 20px;
+    box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.2);
+    font-size: 18px;
+}
