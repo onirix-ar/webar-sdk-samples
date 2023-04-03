@@ -6,7 +6,7 @@ Access the experience through the following [link](https://onirix-ar.github.io/t
 
 ## Preview
 
-![](portal-sample.gif)
+![](../portal-sample.gif)
 
 ## Model
 
