@@ -10,43 +10,62 @@ class OxExperience {
     _scene = null;
     _camera = null;
     _model = null;
-
+    
     oxSDK;
 
     async init() {
         this._raycaster = new THREE.Raycaster();
-        this._animationMixers = [];
-        this._clock = new THREE.Clock(true);
 
         const renderCanvas = await this.initSDK();
         this.setupRenderer(renderCanvas);
 
-        // Add transparent floor for model placement using raycasting
-        this._floor = new THREE.Mesh(
-            new THREE.PlaneGeometry(100, 100),
-            new THREE.MeshBasicMaterial({
-                color: 0xff00ff,
-                transparent: true,
-                opacity: 0.0,
-                side: THREE.DoubleSide,
-            })
-        );
+        this.oxSDK.subscribe(OnirixSDK.Events.OnDetected, () => {
+            console.log("Detected!")
+            this._model.scale.set(0.15, 0.15, 0.15);
+            this._model.rotation.y = Math.PI / 4;
+            this._model.position.copy(new THREE.Vector3(-0.0905, 0.0686, -0.11));
+            this._scene.add(this._model);
 
-        this._floor.rotateX(Math.PI / 2);
-        this._floor.position.set(0, -1, 0);
-        this._scene.add(this._floor);
+            const textureLoader = new THREE.TextureLoader();
+            this._manualTexture = textureLoader.load("textures/manual.png");    
+            this._webpageTexture = textureLoader.load("textures/webpage.png");    
+
+            this._buttonManual = new THREE.Mesh(
+                new THREE.PlaneGeometry(0.15, 0.075),
+                new THREE.MeshBasicMaterial({
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    map: this._manualTexture
+                })
+            );
+            this._buttonManual.position.copy(new THREE.Vector3(-0.085, 0.2, 0.09));
+            this._buttonManual.rotation.y = Math.PI / 2;
+            this._scene.add(this._buttonManual);
+
+            this._buttonWebpage = new THREE.Mesh(
+                new THREE.PlaneGeometry(0.15, 0.075),
+                new THREE.MeshBasicMaterial({
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    map: this._webpageTexture
+                })
+            );
+            this._buttonWebpage.position.copy(new THREE.Vector3(-0.085, 0.3, 0.09));
+            this._buttonWebpage.rotation.y = Math.PI / 2;
+            this._scene.add(this._buttonWebpage);
+
+            // It is useful to synchronize scene background with the camera feed
+            this._scene.background = new THREE.VideoTexture(this.oxSDK.getCameraFeed());
+        })
 
         this.oxSDK.subscribe(OnirixSDK.Events.OnTouch, (touchPos) => {
             this.onTouch(touchPos);
         })
 
-        this.oxSDK.subscribe(OnirixSDK.Events.OnFrame, () => {
-            const delta = this._clock.getDelta();
-            this._animationMixers.forEach((mixer) => {
-                mixer.update(delta);
-            });
-
-            this.render();
+        this.oxSDK.subscribe(OnirixSDK.Events.OnLost, () => {
+            this._scene.remove(this._model);
+            // It is useful to synchronize scene background with the camera feed
+            this._scene.background = null;
         })
 
         this.oxSDK.subscribe(OnirixSDK.Events.OnFrame, () => {
@@ -56,16 +75,21 @@ class OxExperience {
         this.oxSDK.subscribe(OnirixSDK.Events.OnPose, (pose) => {
             this.updatePose(pose);
         });
-
+    
         this.oxSDK.subscribe(OnirixSDK.Events.OnResize, () => {
             this.onResize();
         });
+
+        this._model = await this.loadModel("caesar.glb");
+
+        this.oxSDK.start();
     }
 
     async initSDK() {
-        this.oxSDK = new OnirixSDK("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUyMDIsInByb2plY3RJZCI6MTQ0MjksInJvbGUiOjMsImlhdCI6MTYxNjc2MDI5M30.knKDX5vda6UyqB8CobqgPQ8BS7OYQo4RDfIuGm-EJGg");
+        this.oxSDK = new OnirixSDK("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUyMDIsInByb2plY3RJZCI6Njg3NDcsInJvbGUiOjMsImlhdCI6MTcwNjI4MzQ2MX0.9b2dqUXoq23UDs9uRaKWd60FHMbj6OP27NW5nJpFL3M");
         const config = {
-            mode: OnirixSDK.TrackingMode.Surface,
+            mode: OnirixSDK.TrackingMode.Spatial,
+            sceneOid: "742418478df44f80887ca24ca163dd13",
         }
         return this.oxSDK.init(config);
     }
@@ -73,20 +97,20 @@ class OxExperience {
     setupRenderer(renderCanvas) {
         const width = renderCanvas.width;
         const height = renderCanvas.height;
-
+    
         // Initialize renderer with renderCanvas provided by Onirix SDK
         this._renderer = new THREE.WebGLRenderer({ canvas: renderCanvas, alpha: true });
         this._renderer.setClearColor(0x000000, 0);
         this._renderer.setSize(width, height);
-
+          
         // Ask Onirix SDK for camera parameters to create a 3D camera that fits with the AR projection.
         const cameraParams = this.oxSDK.getCameraParameters();
         this._camera = new THREE.PerspectiveCamera(cameraParams.fov, cameraParams.aspect, 0.1, 1000);
         this._camera.matrixAutoUpdate = false;
-
+    
         // Create an empty scene
         this._scene = new THREE.Scene();
-
+    
         // Add some lights
         const ambientLight = new THREE.AmbientLight(0xcccccc, 0.4);
         this._scene.add(ambientLight);
@@ -106,6 +130,22 @@ class OxExperience {
         this._camera.matrixWorldNeedsUpdate = true;
     }
 
+    onTouch(touchPos) {
+        // Raycast
+        this._raycaster.setFromCamera(touchPos, this._camera);
+        let intersects = this._raycaster.intersectObject(this._buttonManual);
+
+        if (intersects.length > 0 && intersects[0].object == this._buttonManual) {
+            window.open('https://czechgames.com/files/rules/through-the-ages-new-story-handbook-en.pdf')
+        }
+
+        intersects = this._raycaster.intersectObject(this._buttonWebpage);
+
+        if (intersects.length > 0 && intersects[0].object == this._buttonWebpage) {
+            window.open('https://czechgames.com/en/through-the-ages/')
+        }
+    }
+
     onResize() {
         // When device orientation changes, it is required to update camera params.
         const width = this._renderer.domElement.width;
@@ -117,34 +157,13 @@ class OxExperience {
         this._renderer.setSize(width, height);
     }
 
-    onTouch(touchPos) {
-        // Raycast
-        this._raycaster.setFromCamera(touchPos, this._camera);
-        const intersects = this._raycaster.intersectObject(this._floor);
-
-        if (intersects.length > 0 && intersects[0].object == this._floor) {
-            // Load a 3D model and add it to the scene over touched position
-            const gltfLoader = new GLTFLoader();
-            gltfLoader.load("bear.glb", (gltf) => {
-                const model = gltf.scene;
-                const animations = gltf.animations;
-                model.position.set(intersects[0].point.x, intersects[0].point.y, intersects[0].point.z);
-                // Model looking to the camera on Y axis
-                model.rotation.y = Math.atan2(this._camera.position.x - model.position.x, this._camera.position.z - model.position.z);
-                this._scene.add(model);
-                // Play model animation
-                const mixer = new THREE.AnimationMixer(model);
-                const action = mixer.clipAction(animations[0]);
-                action.play();
-                this._animationMixers.push(mixer);
-            });
-
-            if (!this._started) {
-                // Start tracking on first touch
-                this.oxSDK.start();
-                this._started = true;
-            }
-        }
+    async loadModel(uri) {
+       const gltfLoader = new GLTFLoader();
+       return new Promise((resolve, reject) => {
+           gltfLoader.load(uri, (gltf) => {
+               resolve(gltf.scene);
+           }, undefined, (error) => reject(error));
+       });
     }
 }
 

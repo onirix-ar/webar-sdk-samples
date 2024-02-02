@@ -1,229 +1,278 @@
 // ====== Imports ======
 
-import OnirixSDK from "https://unpkg.com/@onirix/ar-engine-sdk@1.1.0/dist/ox-sdk.esm.js";
-import * as THREE from "https://cdn.skypack.dev/three@0.127.0";
-import { GLTFLoader } from "https://cdn.skypack.dev/three@0.127.0/examples/jsm/loaders/GLTFLoader.js";
+import OnirixSDK from "https://unpkg.com/@onirix/ar-engine-sdk@1.6.2/dist/ox-sdk.esm.js";
+import * as THREE from "https://cdn.skypack.dev/three@0.136.0";
+import { GLTFLoader } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/GLTFLoader.js";
 
-// ====== ThreeJS ======
+class OxExperience {
 
-var renderer, scene, camera, floor, car, envMap;
-var isCarPlaced = false;
+    _renderer = null;
+    _scene = null;
+    _camera = null;
+    _model = null;
 
-function setupRenderer(rendererCanvas) {
-  const width = rendererCanvas.width;
-  const height = rendererCanvas.height;
+    oxSDK;
 
-  // Initialize renderer with rendererCanvas provided by Onirix SDK
-  renderer = new THREE.WebGLRenderer({ canvas: rendererCanvas, alpha: true });
-  renderer.setClearColor(0x000000, 0);
-  renderer.setSize(width, height);
-  renderer.outputEncoding = THREE.sRGBEncoding;
+    async init() {
+        this._raycaster = new THREE.Raycaster();
+        this._animationMixers = [];
+        this._clock = new THREE.Clock(true);
+        this._carPlaced = false;
 
-  // Ask Onirix SDK for camera parameters to create a 3D camera that fits with the AR projection.
-  const cameraParams = OX.getCameraParameters();
-  camera = new THREE.PerspectiveCamera(cameraParams.fov, cameraParams.aspect, 0.1, 1000);
-  camera.matrixAutoUpdate = false;
+        const renderCanvas = await this.initSDK();
+        this.setupRenderer(renderCanvas);
 
-  // Create an empty scene
-  scene = new THREE.Scene();
+        // Load env map
+        const textureLoader = new THREE.TextureLoader();
+        this._envMap = textureLoader.load("envmap.jpg");
+        this._envMap.mapping = THREE.EquirectangularReflectionMapping;
+        this._envMap.encoding = THREE.sRGBEncoding;
 
-  // Add some lights
-  const hemisphereLight = new THREE.HemisphereLight(0xbbbbff, 0x444422);
-  scene.add(hemisphereLight);
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-  directionalLight.position.set(0, 10, 0);
-  scene.add(directionalLight);
+        this.oxSDK.subscribe(OnirixSDK.Events.OnFrame, () => {
+            const delta = this._clock.getDelta();
 
-  // Load env map
-  const textureLoader = new THREE.TextureLoader();
-  envMap = textureLoader.load("envmap.jpg");
-  envMap.mapping = THREE.EquirectangularReflectionMapping;
-  envMap.encoding = THREE.sRGBEncoding;
+            this._animationMixers.forEach((mixer) => {
+                mixer.update(delta);
+            });
 
-  // Add transparent floor to generate shadows
-  floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(100, 100),
-    new THREE.MeshBasicMaterial({
-      color: 0xff00ff,
-      transparent: true,
-      opacity: 0.0,
-      side: THREE.DoubleSide,
-    })
-  );
+            this.render();
+        })
 
-  // Rotate floor to be horizontal
-  floor.rotateX(Math.PI / 2);
-}
+        this.oxSDK.subscribe(OnirixSDK.Events.OnFrame, () => {
+            this.render();
+        })
 
-function updatePose(pose) {
-  // When a new pose is detected, update the 3D camera
-  let modelViewMatrix = new THREE.Matrix4();
-  modelViewMatrix = modelViewMatrix.fromArray(pose);
-  camera.matrix = modelViewMatrix;
-  camera.matrixWorldNeedsUpdate = true;
-}
+        this.oxSDK.subscribe(OnirixSDK.Events.OnPose, (pose) => {
+            this.updatePose(pose);
+        });
 
-function onResize() {
-  // When device orientation changes, it is required to update camera params.
-  const width = renderer.domElement.width;
-  const height = renderer.domElement.height;
-  const cameraParams = OX.getCameraParameters();
-  camera.fov = cameraParams.fov;
-  camera.aspect = cameraParams.aspect;
-  camera.updateProjectionMatrix();
-  renderer.setSize(width, height);
-}
+        this.oxSDK.subscribe(OnirixSDK.Events.OnResize, () => {
+            this.onResize();
+        });
 
-function render() {
-  // Just render the scene
-  renderer.render(scene, camera);
-}
+        this.oxSDK.subscribe(OnirixSDK.Events.OnHitTestResult, (hitResult) => {
+            if (this._modelPlaced && !this.isCarPlaced()) {
+                this._model.position.copy(hitResult.position);
+            }
+        });
 
-function onHitResult(hitResult) {
-  if (car && !isCarPlaced) {
-    document.getElementById("transform-controls").style.display = "block";
-    car.position.copy(hitResult.position);
-  }
-}
-
-function placeCar() {
-  isCarPlaced = true;
-  OX.start();
-}
-
-function scaleCar(value) {
-  car.scale.set(value, value, value);
-}
-
-function rotateCar(value) {
-  car.rotation.y = value;
-}
-
-function changeCarColor(value) {
-  car.traverse((child) => {
-    if (child.material && child.material.name === "CarPaint") {
-      child.material.color.setHex(value);
+        const gltfLoader = new GLTFLoader();
+        gltfLoader.load("range_rover.glb", (gltf) => {
+            this._model = gltf.scene;
+            this._model.traverse((child) => {
+                if (child.material) {
+                    console.log("updating material");
+                    child.material.envMap = this._envMap;
+                    child.material.needsUpdate = true;
+                }
+            });
+            this._model.scale.set(0.5, 0.5, 0.5);
+            this._scene.add(this._model);
+            this._modelPlaced = true;
+        });
     }
-  });
-}
 
-// ====== Onirix SDK ======
-
-const OX = new OnirixSDK(
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUyMDIsInByb2plY3RJZCI6MTQ0MjgsInJvbGUiOjMsImlhdCI6MTYxNjc1ODY5NX0.8F5eAPcBGaHzSSLuQAEgpdja9aEZ6Ca_Ll9wg84Rp5k"
-);
-
-const config = {
-  mode: OnirixSDK.TrackingMode.Surface,
-};
-
-OX.init(config)
-  .then((rendererCanvas) => {
-    // Setup ThreeJS renderer
-    setupRenderer(rendererCanvas);
-
-    // Load car model
-    const gltfLoader = new GLTFLoader();
-    gltfLoader.load("range_rover.glb", (gltf) => {
-      car = gltf.scene;
-      car.traverse((child) => {
-        if (child.material) {
-          console.log("updating material");
-          child.material.envMap = envMap;
-          child.material.needsUpdate = true;
+    async initSDK() {
+        this.oxSDK = new OnirixSDK("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUyMDIsInByb2plY3RJZCI6MTQ0MjgsInJvbGUiOjMsImlhdCI6MTYxNjc1ODY5NX0.8F5eAPcBGaHzSSLuQAEgpdja9aEZ6Ca_Ll9wg84Rp5k");
+        const config = {
+            mode: OnirixSDK.TrackingMode.Surface,
         }
-      });
-      car.scale.set(0.5, 0.5, 0.5);
-      scene.add(car);
-
-      // All loaded, so hide loading screen
-      document.getElementById("loading-screen").style.display = "none";
-
-      document.getElementById("initializing").style.display = "block";
-
-      document.getElementById("tap-to-place").addEventListener("click", () => {
-        placeCar();
-        document.getElementById("transform-controls").style.display = "none";
-        document.getElementById("color-controls").style.display = "block";
-      });
-
-      const scaleSlider = document.getElementById("scale-slider");
-      scaleSlider.addEventListener("input", () => {
-        scaleCar(scaleSlider.value / 100);
-      });
-      const rotationSlider = document.getElementById("rotation-slider");
-      rotationSlider.addEventListener("input", () => {
-        rotateCar((rotationSlider.value * Math.PI) / 180);
-      });
-
-      document.getElementById("black").addEventListener("click", () => {
-        changeCarColor(0x111111);
-      });
-
-      document.getElementById("silver").addEventListener("click", () => {
-        changeCarColor(0xffffff);
-      });
-
-      document.getElementById("orange").addEventListener("click", () => {
-        changeCarColor(0xff2600);
-      });
-
-      document.getElementById("blue").addEventListener("click", () => {
-        changeCarColor(0x0011ff);
-      });
-    });
-
-    // Subscribe to events
-    OX.subscribe(OnirixSDK.Events.OnPose, function (pose) {
-      updatePose(pose);
-    });
-
-    OX.subscribe(OnirixSDK.Events.OnResize, function () {
-      onResize();
-    });
-
-    OX.subscribe(OnirixSDK.Events.OnTouch, function (touchPos) {
-      onTouch(touchPos);
-    });
-
-    OX.subscribe(OnirixSDK.Events.OnHitTestResult, function (hitResult) {
-      document.getElementById("initializing").style.display = "none";
-      onHitResult(hitResult);
-    });
-
-    OX.subscribe(OnirixSDK.Events.OnFrame, function() {
-      render();
-    });
-
-  })
-  .catch((error) => {
-    // An error ocurred, chech error type and display it
-    document.getElementById("loading-screen").style.display = "none";
-
-    switch (error.name) {
-      case "INTERNAL_ERROR":
-        document.getElementById("error-title").innerText = "Internal Error";
-        document.getElementById("error-message").innerText =
-          "An unespecified error has occurred. Your device might not be compatible with this experience.";
-        break;
-
-      case "CAMERA_ERROR":
-        document.getElementById("error-title").innerText = "Camera Error";
-        document.getElementById("error-message").innerText =
-          "Could not access to your device's camera. Please, ensure you have given required permissions from your browser settings.";
-        break;
-
-      case "SENSORS_ERROR":
-        document.getElementById("error-title").innerText = "Sensors Error";
-        document.getElementById("error-message").innerText =
-          "Could not access to your device's motion sensors. Please, ensure you have given required permissions from your browser settings.";
-        break;
-
-      case "LICENSE_ERROR":
-        document.getElementById("error-title").innerText = "License Error";
-        document.getElementById("error-message").innerText = "This experience does not exist or has been unpublished.";
-        break;
+        return this.oxSDK.init(config);
     }
 
-    document.getElementById("error-screen").style.display = "flex";
-  });
+    placeCar() {
+        this._carPlaced = true;
+        this.oxSDK.start();
+    }
+
+    isCarPlaced() {
+        return this._carPlaced;
+    }
+
+    onHitTest(listener) {
+        this.oxSDK.subscribe(OnirixSDK.Events.OnHitTestResult, listener);
+    }
+
+    setupRenderer(renderCanvas) {
+        const width = renderCanvas.width;
+        const height = renderCanvas.height;
+
+        // Initialize renderer with renderCanvas provided by Onirix SDK
+        this._renderer = new THREE.WebGLRenderer({ canvas: renderCanvas, alpha: true });
+        this._renderer.setClearColor(0x000000, 0);
+        this._renderer.setSize(width, height);
+        this._renderer.outputEncoding = THREE.sRGBEncoding;
+
+        // Ask Onirix SDK for camera parameters to create a 3D camera that fits with the AR projection.
+        const cameraParams = this.oxSDK.getCameraParameters();
+        this._camera = new THREE.PerspectiveCamera(cameraParams.fov, cameraParams.aspect, 0.1, 1000);
+        this._camera.matrixAutoUpdate = false;
+
+        // Create an empty scene
+        this._scene = new THREE.Scene();
+
+        // Add some lights
+        const ambientLight = new THREE.AmbientLight(0xcccccc, 0.4);
+        this._scene.add(ambientLight);
+        const hemisphereLight = new THREE.HemisphereLight(0xbbbbff, 0x444422);
+        this._scene.add(hemisphereLight);
+    }
+
+    render() {
+        this._renderer.render(this._scene, this._camera);
+    }
+
+    updatePose(pose) {
+        // When a new pose is detected, update the 3D camera
+        let modelViewMatrix = new THREE.Matrix4();
+        modelViewMatrix = modelViewMatrix.fromArray(pose);
+        this._camera.matrix = modelViewMatrix;
+        this._camera.matrixWorldNeedsUpdate = true;
+    }
+
+    onResize() {
+        // When device orientation changes, it is required to update camera params.
+        const width = this._renderer.domElement.width;
+        const height = this._renderer.domElement.height;
+        const cameraParams = this.oxSDK.getCameraParameters();
+        this._camera.fov = cameraParams.fov;
+        this._camera.aspect = cameraParams.aspect;
+        this._camera.updateProjectionMatrix();
+        this._renderer.setSize(width, height);
+    }
+
+    scaleCar(value) {
+        this._model.scale.set(value, value, value);
+    }
+
+    rotateCar(value) {
+        this._model.rotation.y = value;
+    }
+
+    changeCarColor(value) {
+        this._model.traverse((child) => {
+            if (child.material && child.material.name === "CarPaint") {
+                child.material.color.setHex(value);
+            }
+        });
+    }
+}
+
+
+class OxExperienceUI {
+
+    _loadingScreen = null;
+    _errorScreen = null;
+    _moveAnimation = null;
+    _errorTitle = null;
+    _errorMessage = null;
+
+    init() {
+        this._loadingScreen = document.querySelector("#loading-screen");
+        this._errorScreen = document.querySelector("#error-screen");
+        this._errorTitle = document.querySelector("#error-title");
+        this._errorMessage = document.querySelector("#error-message");
+
+        this._transformControls = document.querySelector("#transform-controls");
+        this._colorControls = document.querySelector("#color-controls");
+        this._placeButton = document.querySelector("#tap-to-place");
+        this._scaleSlider = document.querySelector("#scale-slider");
+        this._rotationSlider = document.querySelector("#rotation-slider");
+        this._black = document.querySelector("#black");
+        this._orange = document.querySelector("#orange");
+        this._blue = document.querySelector("#blue");
+        this._silver = document.querySelector("#silver");
+    }
+
+    showControls() {
+        this._transformControls.style.display = "block";
+    }
+
+    showColors() {
+        this._transformControls.style.display = "none";
+        this._colorControls.style.display = "block";
+    }
+
+    onPlace(listener) {
+        this._placeButton.addEventListener('click', listener);
+    }
+
+    onScaleChange(listener) {
+        this._scaleSlider.addEventListener('input', () => { listener(this._scaleSlider.value / 100) });
+    }
+
+    onRotationChange(listener) {
+        this._rotationSlider.addEventListener('input', () => { listener(this._rotationSlider.value * Math.PI / 180) });
+    }
+
+    onBlack(listener) {
+        this._black.addEventListener('click', listener);
+    }
+
+    onOrange(listener) {
+        this._orange.addEventListener('click', listener);
+    }
+
+    onBlue(listener) {
+        this._blue.addEventListener('click', listener);
+    }
+
+    onSilver(listener) {
+        this._silver.addEventListener('click', listener);
+    }
+
+    hideLoadingScreen() {
+        this._loadingScreen.style.display = 'none';
+    }
+
+    showError(errorTitle, errorMessage) {
+        this._errorTitle.innerText = errorTitle;
+        this._errorMessage.innerText = errorMessage;
+        this._errorScreen.style.display = 'flex';
+    }
+
+}
+
+const oxExp = new OxExperience();
+const oxUI = new OxExperienceUI();
+
+oxUI.init();
+try {
+    await oxExp.init();
+
+    oxUI.onPlace(() => { 
+        oxExp.placeCar();
+        oxUI.showColors() 
+    })
+    
+    oxExp.onHitTest(() => { 
+        if (!oxExp.isCarPlaced()) {
+            oxUI.showControls();
+        }
+    });
+
+    oxUI.onRotationChange((value) => { oxExp.rotateCar(value) })
+    oxUI.onScaleChange((value) => { oxExp.scaleCar(value) })
+
+    oxUI.onBlack(() => oxExp.changeCarColor(0x111111))
+    oxUI.onBlue(() => oxExp.changeCarColor(0x0011ff))
+    oxUI.onOrange(() => oxExp.changeCarColor(0xff2600))
+    oxUI.onSilver(() => oxExp.changeCarColor(0xffffff))
+    
+    oxUI.hideLoadingScreen();
+
+} catch (error) {
+    switch (error.name) {
+        case 'INTERNAL_ERROR':
+            oxUI.showError('Internal Error', 'An unespecified error has occurred. Your device might not be compatible with this experience.');
+            break;
+        case 'CAMERA_ERROR':
+            oxUI.showError('Camera Error', 'Could not access to your device\'s camera. Please, ensure you have given required permissions from your browser settings.');
+            break;
+        case 'SENSORS_ERROR':
+            oxUI.showError('Sensors Error', 'Could not access to your device\'s motion sensors. Please, ensure you have given required permissions from your browser settings.');
+            break;
+        case 'LICENSE_ERROR':
+            oxUI.showError('License Error', 'This experience does not exist or has been unpublished.');
+    }
+}
