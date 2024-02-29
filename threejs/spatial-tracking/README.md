@@ -8,7 +8,11 @@ The experience will load by scanning the box of [*Through The Ages: A New Story 
 
 This experience is thought to be interacted with as if the box where laid on a table and you where looking at it from the front. An image on a screen would make you see the experience as if you where above the box and you would not see the content properly.
 
-Note: Spatial tracking is generally considered more applicable to environments (spaces) rather than objects. However, we have supplied an example featuring an object to facilitate a more effective testing experience.
+In order to be able to accurately place objects inside the experience's coordinate system you can use Onirix's editor. If you place the objects there beforehand you can copy their position and orientation:
+
+![test-qr](coordinates.png) 
+
+> Note: Spatial tracking is generally considered more applicable to environments (spaces) rather than objects. However, we have supplied an example featuring an object to facilitate a more effective testing experience.
 
 ## Model Information:
 * title:	JULIUS CAESAR - PHRYGIE TURKEY

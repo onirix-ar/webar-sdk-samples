@@ -9,5 +9,5 @@ Sample | Description | Preview | Link
 **Surface tracking demo** | Touch floor surface to place animated objects and track them| ![](surface-sample.gif) | [Open](./surface-tracking)
 **Surface tracking portal** | Use hit test to detect a surface, place a portal and track it| ![](portal-sample.gif) | [Open](./surface-tracking-portal)
 **Surface tracking car configurator demo** | Use hit test to detect a surface, place a car and track it| ![](surface-hit-test-sample.gif) | [Open](./surface-tracking-hit-test)
-**Spatial tracking demo** | Detect a board game and see useful information about it|-| [Open](./spatial-tracking)
+**Spatial tracking demo** | Detect a board game and see useful information about it| ![](spatial-sample.gif) | [Open](./spatial-tracking)
 
