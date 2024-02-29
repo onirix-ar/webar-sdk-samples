@@ -1,6 +1,6 @@
 // ====== Imports ======
 
-import OnirixSDK from "https://sdk.onirix.com/1.6.2/ox-sdk.esm.js";
+import OnirixSDK from "https://unpkg.com/@onirix/ar-engine-sdk@1.6.5/dist/ox-sdk.esm.js";
 import * as THREE from "https://cdn.skypack.dev/three@0.136.0";
 import { GLTFLoader } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/GLTFLoader.js";
 
