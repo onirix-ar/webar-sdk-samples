@@ -6,11 +6,15 @@ Access the experience through the following [link](https://onirix-ar.github.io/t
 
 The experience will load by scanning the box of [*Through The Ages: A New Story of Civilization*](https://czechgames.com/en/through-the-ages/).
 
-This experience is thought to be interacted with as if the box where laid on a table and you where looking at it from the front. An image on a screen would make you see the experience as if you where above the box and you would not see the content properly. However, you can use [this image](box.png) on a flat, horizontal surface if you want to try out the experience and do not have the game's box. 
+This experience is thought to be interacted with as if the box where laid on a table and you where looking at it from the front. An image on a screen would make you see the experience as if you where above the box and you would not see the content properly. However, you can use the following [image](box.png) on a flat, horizontal surface if you want to try out the experience and do not have the game's box. 
 
-In order to be able to accurately place objects inside the experience's coordinate system you can use Onirix's editor. If you place the objects there beforehand you can copy their position and orientation:
+![test-qr](box.png) 
+
+In order to be able to accurately place objects inside the experience's coordinate system you can use [Onirix Studio](https://studio.onirix.com). From there, you can add fake objects or collections and copy their position and orientation from scene's properties panel:
 
 ![test-qr](coordinates.png) 
+
+i.e: You can use these values to position Caesar's model with: ```this._model.position.copy(new THREE.Vector3(0.0132, 0.0005, -0.0045));```
 
 > Note: Spatial tracking is generally considered more applicable to environments (spaces) rather than objects. However, we have supplied an example featuring an object to facilitate a more effective testing experience.
 
