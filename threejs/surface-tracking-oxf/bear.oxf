@@ -1,0 +1,41 @@
+{
+  "version": "1.0",
+  "date": "2023-04-06T00:00:00Z",
+  "scene": {
+    "name": "Scene",
+    "oid": "11a8e11543a6483b9f35c4e2b1e31dc3",
+    "elements": [
+      {
+        "name": "Bear",
+        "oid": "84a9fac43e96b3817de19b940b4ac07c",
+        "type": "Model",
+        "asset": "9df70bb478b4463cc990aa8eac391e41",
+        "transform": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        }
+      }
+    ],
+    "assets": [
+      {
+        "name": "Asset Bear",
+        "oid": "9df70bb478b4463cc990aa8eac391e41",
+        "type": "Model",
+        "uri": "bear.glb"
+      }
+    ]
+  }
+}
