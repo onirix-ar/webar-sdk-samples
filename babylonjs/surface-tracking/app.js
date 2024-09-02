@@ -31,8 +31,6 @@ function setupRenderer(rendererCanvas) {
   // Add some lights
   const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
-  background = new BABYLON.Layer("back", null, scene);
-
   // Add transparent floor for model placement using raycasting
   floor = BABYLON.Mesh.CreatePlane("floor", 100, scene);
   floor.material = new BABYLON.StandardMaterial("floorMaterial", scene);
