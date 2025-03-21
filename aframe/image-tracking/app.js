@@ -1,6 +1,6 @@
 // ====== Imports ======
 
-import OnirixSDK from "https://unpkg.com/@onirix/ar-engine-sdk@1.6.5/dist/ox-sdk.esm.js";
+import OnirixSDK from "https://unpkg.com/@onirix/ar-engine-sdk@1.9.0/dist/ox-sdk.esm.js";
 
 // ====== Onirix SDK ======
 
@@ -100,10 +100,6 @@ AFRAME.registerComponent("onirix-sdk", {
   }
 });
 
-setTimeout(() => {
-  AFRAME.scenes[0].setAttribute("onirix-sdk", "");
-}, 1000);
-
 function updatePose(pose) {
   // When a new pose is detected, update the 3D camera
   let modelViewMatrix = new THREE.Matrix4();
@@ -123,3 +119,8 @@ function onResize() {
   camera.object3DMap.camera.updateProjectionMatrix();
   renderer.setSize(width, height);
 }
+
+const sceneEl = document.querySelector("a-scene");
+sceneEl.addEventListener("loaded", () => {
+  sceneEl.setAttribute("onirix-sdk", "");
+});

@@ -1,6 +1,6 @@
 // ====== Imports ======
 
-import OnirixSDK from "https://unpkg.com/@onirix/ar-engine-sdk@1.6.5/dist/ox-sdk.esm.js";
+import OnirixSDK from "https://unpkg.com/@onirix/ar-engine-sdk@1.9.0/dist/ox-sdk.esm.js";
 
 // ====== Onirix SDK ======
 
@@ -140,6 +140,7 @@ function onTouch(touchPos) {
 
 }
 
-setTimeout(() => {
-    AFRAME.scenes[0].setAttribute("onirix-sdk", "");
-}, 1000);
+const sceneEl = document.querySelector("a-scene");
+sceneEl.addEventListener("loaded", () => {
+  sceneEl.setAttribute("onirix-sdk", "");
+});
